@@ -93,7 +93,9 @@ export default class AwsAmplify extends Plugin {
   }
 
   handleFileUpload(filename, file, position, total) {
-    this.uppy.log(`[AwsAmplify] Uploading ${position} of ${total}`)
+    const uppy = this.uppy;
+    const uploader = this;
+    uppy.log(`[AwsAmplify] Uploading ${position} of ${total}`)
 
     const { storage, getOptions } = this.opts
 
@@ -101,11 +103,11 @@ export default class AwsAmplify extends Plugin {
       .put(filename, file.data, {
         contentType: file.type,
         progressCallback(progress) {
-          if (!this.uppy.getFile(file.id)) {
+          if (!uppy.getFile(file.id)) {
             throw new Error('File removed?')
           }
-          this.uppy.emit('upload-progress', file, {
-            uploader: this,
+          uppy.emit('upload-progress', file, {
+            uploader,
             bytesUploaded: progress.loaded,
             bytesTotal: progress.total
           })
@@ -115,19 +117,19 @@ export default class AwsAmplify extends Plugin {
         return storage
           .get(body.key, getOptions)
           .then(uploadURL => {
-            this.uppy.emit('upload-success', file, {
+            uppy.emit('upload-success', file, {
               body,
               uploadURL
             })
           })
           .catch(err => {
-            this.uppy.emit('upload-error', file, {
+            uppy.emit('upload-error', file, {
               body: err
             })
           })
       })
       .catch(err => {
-        this.uppy.emit('upload-error', file, err)
+        uppy.emit('upload-error', file, err)
       })
   }
 
